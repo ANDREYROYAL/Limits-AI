@@ -12,7 +12,9 @@ object Format {
 
     fun duration(ms: Long): String {
         if (ms <= 0) return "сейчас"
-        val totalMin = (ms + 59_999) / 60_000
+        // Округляем вниз, как официальные приложения: 4 ч 59 мин, а не 5 ч 1 мин.
+        val totalMin = ms / 60_000
+        if (totalMin == 0L) return "меньше минуты"
         val d = totalMin / 1440
         val h = (totalMin % 1440) / 60
         val m = totalMin % 60

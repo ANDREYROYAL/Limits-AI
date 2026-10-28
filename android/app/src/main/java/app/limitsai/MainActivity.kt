@@ -194,22 +194,23 @@ private fun ProviderCard(
 
 @Composable
 private fun WindowRow(w: UsageWindow, now: Long) {
-    // Если время сброса прошло, а свежих данных ещё нет — показываем, что лимит уже должен был обнулиться.
+    // Если время сброса прошло, а свежих данных ещё нет — лимит уже должен был обнулиться.
     val resetsAt = w.resetsAt
     val expired = resetsAt != null && resetsAt <= now
-    val used = if (expired) 0.0 else w.usedPercent
+    // Как в приложениях Claude и ChatGPT, показываем остаток, а не расход.
+    val left = if (expired) 100.0 else (100 - w.usedPercent).coerceIn(0.0, 100.0)
     val color = when {
-        used >= 100 -> MaterialTheme.colorScheme.error
-        used >= 80 -> MaterialTheme.colorScheme.tertiary
+        left <= 0 -> MaterialTheme.colorScheme.error
+        left <= 20 -> MaterialTheme.colorScheme.tertiary
         else -> MaterialTheme.colorScheme.primary
     }
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.Bottom) {
             Text(w.label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-            Text("${used.toInt()} %", style = MaterialTheme.typography.titleMedium, color = color)
+            Text("Осталось ${left.toInt()} %", style = MaterialTheme.typography.titleMedium, color = color)
         }
         LinearProgressIndicator(
-            progress = { (used / 100).toFloat().coerceIn(0f, 1f) },
+            progress = { (left / 100).toFloat().coerceIn(0f, 1f) },
             modifier = Modifier.fillMaxWidth().height(6.dp),
             color = color,
             strokeCap = StrokeCap.Round,
@@ -219,6 +220,8 @@ private fun WindowRow(w: UsageWindow, now: Long) {
         val reset = when {
             resetsAt == null -> null
             expired -> "Лимит должен был сброситься, обновите"
+            // Пока лимит не тронут, окно не началось: сервис отдаёт «сейчас + длина окна», и время всё время сдвигается.
+            w.usedPercent <= 0 -> "Окно начнётся с первого запроса"
             else -> "Сброс через ${Format.duration(resetsAt - now)} · ${Format.clock(resetsAt, now)}"
         }
         reset?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
