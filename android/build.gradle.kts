@@ -3,13 +3,7 @@
 buildscript {
     val kotlinVersion = "2.1.0"
     repositories {
-        google {
-            content {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google\\.android.*")
-                includeGroupByRegex("androidx.*")
-            }
-        }
+        if (System.getenv("CORE_ONLY") == null) google()
         mavenCentral()
     }
     dependencies {
