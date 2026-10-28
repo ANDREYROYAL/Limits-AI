@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Limits AI</title>
+  <meta name="description" content="Отслеживание лимитов ИИ-сервисов: сколько осталось и когда сброс.">
+  <meta name="theme-color" content="#f6f5f2" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#16171a" media="(prefers-color-scheme: dark)">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="top">
+    <h1>Limits AI</h1>
+    <div class="top-actions">
+      <button id="notify-btn" class="ghost" type="button" hidden>Включить уведомления</button>
+      <button id="add-btn" class="primary" type="button">+ Добавить</button>
+    </div>
+  </header>
+
+  <main id="list" aria-live="polite"></main>
+
+  <section id="empty" class="empty" hidden>
+    <p>Пока нет ни одного лимита.</p>
+    <p class="muted">Добавьте сервис, отмечайте запросы или момент, когда лимит закончился, и приложение покажет, когда он восстановится.</p>
+    <button id="add-btn-empty" class="primary" type="button">Добавить первый лимит</button>
+  </section>
+
+  <footer class="bottom">
+    <button id="export-btn" class="link" type="button">Экспорт</button>
+    <label class="link">Импорт<input id="import-input" type="file" accept="application/json" hidden></label>
+    <span class="muted">Данные хранятся только на этом устройстве.</span>
+  </footer>
+
+  <dialog id="edit-dialog">
+    <form id="edit-form" method="dialog">
+      <h2 id="edit-title">Новый лимит</h2>
+      <div id="presets" class="presets"></div>
+      <label>Название<input name="name" required maxlength="40"></label>
+      <label>Лимит запросов <span class="muted">(необязательно)</span>
+        <input name="limit" type="number" min="1" inputmode="numeric" placeholder="не знаю">
+      </label>
+      <label>Как сбрасывается
+        <select name="type">
+          <option value="rolling">Окно от первого запроса</option>
+          <option value="sliding">Скользящее окно</option>
+          <option value="daily">Каждый день</option>
+          <option value="weekly">Каждую неделю</option>
+          <option value="monthly">Каждый месяц</option>
+        </select>
+      </label>
+      <div class="row">
+        <label data-for="rolling sliding">Часов<input name="hours" type="number" min="1" max="720" value="5"></label>
+        <label data-for="weekly">День
+          <select name="day">
+            <option value="1">Понедельник</option><option value="2">Вторник</option><option value="3">Среда</option>
+            <option value="4">Четверг</option><option value="5">Пятница</option><option value="6">Суббота</option>
+            <option value="0">Воскресенье</option>
+          </select>
+        </label>
+        <label data-for="monthly">Число<input name="date" type="number" min="1" max="31" value="1"></label>
+        <label data-for="daily weekly monthly">Время<input name="time" type="time" value="00:00"></label>
+      </div>
+      <label>Цвет<input name="color" type="color" value="#8a8f98"></label>
+      <div class="dialog-actions">
+        <button type="button" class="ghost" data-close>Отмена</button>
+        <button type="submit" class="primary">Сохранить</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="exhausted-dialog">
+    <form id="exhausted-form" method="dialog">
+      <h2>Лимит исчерпан</h2>
+      <p class="muted">Если сервис написал, когда лимит восстановится, укажите это время. Иначе останется расчётное.</p>
+      <label>Восстановится<input name="resetAt" type="datetime-local" required></label>
+      <div class="chips" id="quick-hours"></div>
+      <div class="dialog-actions">
+        <button type="button" class="ghost" data-close>Отмена</button>
+        <button type="submit" class="primary">Готово</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>
