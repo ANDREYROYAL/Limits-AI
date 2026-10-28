@@ -38,7 +38,9 @@ class AlertsTest {
 
     @Test fun format() {
         assertEquals("сейчас", Format.duration(0))
-        assertEquals("2 мин", Format.duration(90_000))
+        assertEquals("1 мин", Format.duration(90_000))
+        assertEquals("меньше минуты", Format.duration(30_000))
+        assertEquals("4 ч 59 мин", Format.duration(18_000_000 - 30_000))
         assertEquals("1 ч 30 мин", Format.duration(5_400_000))
         assertEquals("1 д 2 ч", Format.duration(93_600_000))
         val now = 1_761_652_800_000L // 2025-10-28T12:00Z
