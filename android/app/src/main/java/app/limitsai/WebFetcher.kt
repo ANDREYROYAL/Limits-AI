@@ -2,6 +2,8 @@ package app.limitsai
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.webkit.CookieManager
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
@@ -17,6 +19,7 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 /**
@@ -26,12 +29,13 @@ import kotlinx.serialization.json.Json
  * поэтому сервис видит обычный браузер, а не скрипт.
  */
 class WebFetcher(private val context: Context) {
+    private val main = Handler(Looper.getMainLooper())
 
     suspend fun get(url: String, headers: Map<String, String> = emptyMap()): String = withContext(Dispatchers.Main) {
         var sawChallenge = false
         try {
             withTimeout(TIMEOUT_MS) {
-                suspendCancellableCoroutine { cont ->
+                suspendCancellableCoroutine<Result<String>> { cont ->
                     val web = createWebView(context)
                     var done = false
                     fun finish(result: Result<String>) {
@@ -55,7 +59,8 @@ class WebFetcher(private val context: Context) {
                             if (request.isForMainFrame) finish(Result.failure(FetchException(FetchError.NETWORK)))
                         }
                     }
-                    cont.invokeOnCancellation { if (!done) { done = true; web.destroy() } }
+                    // Отмена может прийти из другого потока, а WebView трогать можно только из главного.
+                    cont.invokeOnCancellation { main.post { if (!done) { done = true; web.destroy() } } }
                     web.loadUrl(url, headers)
                 }
             }.getOrThrow()
